@@ -9,3 +9,17 @@ module.exports.createMessage =  async (payload) => {
         return {error: err.message}
     }
 }
+
+module.exports.fetchChatHistory =  async (chatId) => {
+    try {
+        const chatHistory = await messageModel.find({chat: chatId}).limit(20)
+        return chatHistory.map((item) =>{
+            return {
+               role: item.role,
+               content: item.content
+            }
+        })
+    } catch (err) {
+        return {error: err.message}
+    }
+}

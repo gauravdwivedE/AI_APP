@@ -3,7 +3,7 @@ const cookie = require("cookie");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.model");
 const {main} = require('../services/ai.service')
-const {createMessage} = require('../handlers/message.handler')
+const {createMessage, fetchChatHistory} = require('../handlers/message.handler')
 
 function initSocketServer(httpServer) {
   const io = new Server(httpServer, {});
@@ -39,11 +39,17 @@ function initSocketServer(httpServer) {
       if(userMessage.error){
         return socket.emit("message-error", userMessage.error)
       }
-      
-      const res =  await main(userMessage)
+
+      const chatHistory = await fetchChatHistory(payload.chat)
+
+      if(chatHistory.error){
+        return socket.emit("message-error", chatHistory.error)
+      }
+
+      const res =  await main(chatHistory)
 
       //changing message payload
-      payload.role = 'model'
+      payload.role = 'assistant'
       payload.content = res
 
       const aiMessage = await createMessage(payload)
@@ -53,7 +59,7 @@ function initSocketServer(httpServer) {
         return socket.emit("message-error", aiMessage.error)
       }
     })
-
+    
   });
 }
 
