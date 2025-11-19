@@ -13,5 +13,4 @@ app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 
 
-
 module.exports = app;
