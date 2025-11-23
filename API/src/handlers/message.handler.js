@@ -12,13 +12,14 @@ module.exports.createMessage =  async (payload) => {
 
 module.exports.fetchChatHistory =  async (chatId) => {
     try {
-        const chatHistory = await messageModel.find({chat: chatId}).limit(20)
-        return chatHistory.map((item) =>{
+        const chatHistory = await messageModel.find({chat: chatId}).limit(20).lean()
+        return chatHistory.map((item) => {
             return {
                role: item.role,
-               content: item.content
+               parts: [{text: item.content}]
             }
         })
+        
     } catch (err) {
         return {error: err.message}
     }

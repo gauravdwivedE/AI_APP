@@ -41,7 +41,7 @@ function initSocketServer(httpServer) {
       }
 
       const chatHistory = await fetchChatHistory(payload.chat)
-
+      
       if(chatHistory.error){
         return socket.emit("message-error", chatHistory.error)
       }
@@ -49,7 +49,7 @@ function initSocketServer(httpServer) {
       const res =  await main(chatHistory)
 
       //changing message payload
-      payload.role = 'assistant'
+      payload.role = 'model'
       payload.content = res
 
       const aiMessage = await createMessage(payload)
