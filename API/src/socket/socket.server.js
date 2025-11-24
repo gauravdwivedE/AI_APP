@@ -2,8 +2,9 @@ const { Server } = require("socket.io");
 const cookie = require("cookie");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.model");
-const {main} = require('../services/ai.service')
+const {main, generateVector} = require('../services/ai.service')
 const {createMessage, fetchChatHistory} = require('../handlers/message.handler')
+const {createMemory, queryMemory} = require('../services/vector.service')
 
 function initSocketServer(httpServer) {
   const io = new Server(httpServer, {});
@@ -32,7 +33,7 @@ function initSocketServer(httpServer) {
         content: data.content,
         chat: data.chat,
         user: socket.user._id,
-        role: 'user'
+        role: 'user',
       }
       const userMessage = await createMessage(payload)
 
@@ -40,11 +41,25 @@ function initSocketServer(httpServer) {
         return socket.emit("message-error", userMessage.error)
       }
 
+      const vectors = await generateVector(data.content)
+     //---> doute
+      console.log(await queryMemory({queryVectors: vectors, limit:3, metadata:{}} ));
+      
+      await createMemory({
+        vectors,
+        messageId: userMessage._id,
+        metadata:{
+          chat: data.chat,
+          user: socket.user._id,
+          text: data.content
+        }
+      })
+    
       const chatHistory = await fetchChatHistory(payload.chat)
       
-      if(chatHistory.error){
-        return socket.emit("message-error", chatHistory.error)
-      }
+       if(chatHistory.error){
+         return socket.emit("message-error", chatHistory.error)
+       }
 
       const res =  await main(chatHistory)
 
@@ -54,6 +69,23 @@ function initSocketServer(httpServer) {
 
       const aiMessage = await createMessage(payload)
 
+       
+      if(aiMessage.error){
+        return socket.emit("message-error", aiMessage.error)
+      }
+
+      const resVectors = await generateVector(res)
+
+      await createMemory({
+        vectors: resVectors,
+        messageId: aiMessage._id,
+        metadata:{
+          chat: data.chat,
+          user: socket.user._id,
+          text: res
+        }
+      })
+    
       socket.emit("ai-response", aiMessage.content)
       if(aiMessage.error){
         return socket.emit("message-error", aiMessage.error)
