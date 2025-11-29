@@ -19,13 +19,10 @@ async function queryMemory({queryVectors, limit = 6,  metadata}) {
     const data = await aiAiIndex.query({
         vector: queryVectors,
         topK: limit,
-        filter: metadata ? {metadata} : undefined,
+        filter:  metadata || undefined,
         includeMetadata: true
-    })
-
-    console.log(
-        data.matches
-    );
+    })    
+        return data.matches
 }
 
 module.exports = {

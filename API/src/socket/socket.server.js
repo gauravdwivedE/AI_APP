@@ -37,23 +37,21 @@ function initSocketServer(httpServer) {
         role: "user",
       };
 
-      const userMessage = await createMessage(payload);
+      const [userMessage, vectors] = await Promise.all([
+         createMessage(payload),
+         generateVector(data.content)
 
-      if (userMessage.error) {
-        return socket.emit("message-error", userMessage.error);
-      }
-
-      const vectors = await generateVector(data.content);
-
-      const vMemory = await queryMemory({
-        queryVectors: vectors,
-        limit: 6,
-        metadata: {
-          user: socket.user._id
-        },
-      });
-
-      await createMemory({
+      ])
+ 
+      const [vMemory, i, chatHistory] = await Promise.all([
+        queryMemory({
+          queryVectors: vectors,
+          limit: 6,
+          metadata: {
+            user: socket.user._id
+          },
+        }),
+        createMemory({
         vectors,
         messageId: userMessage._id,
         metadata: {
@@ -61,42 +59,32 @@ function initSocketServer(httpServer) {
           user: socket.user._id,
           text: data.content,
         },
-      });
+      }),
+       fetchChatHistory(data.chat)
+      ])
 
-      const chatHistory = await fetchChatHistory(payload.chat);
 
-      if (chatHistory.error) {
-        return socket.emit("message-error", chatHistory.error);
-      }
-
-      const stm = chatHistory.map((item) => {
-        return {
-          role: item.role,
-          parts: [{ text: item.content }],
-        };
-      });
-     const ltm = [
+      const ltm = [
                 {
                     role:"user",
                     parts:[{
-                        text:`These are some previous message from the chat use then to get response
-                        ${vMemory?.map((item) => item.metadata.text).join('\n')}
+                        text:`These are some previous message from the chat use then to get response:\n
+                        ${vMemory?.map(item => item.metadata.text).join('\n')}
                         `
                     }]
                 }
-            ]
-      const res = await main([...ltm, ...stm]);
+      ]
+      const res = await main([...ltm, ...chatHistory]);
 
       //changing message payload
       payload.role = "model";
       payload.content = res;
 
-      const aiMessage = await createMessage(payload);
-      if (aiMessage.error) {
-        return socket.emit("message-error", aiMessage.error);
-      }
+      const[aiMessage, resVectors] = await Promise.all([
+        createMessage(payload),
+        generateVector(res)
 
-      const resVectors = await generateVector(res);
+      ])
 
       await createMemory({
         vectors: resVectors,
@@ -108,7 +96,10 @@ function initSocketServer(httpServer) {
         },
       });
 
-      socket.emit("ai-response", res);
+      socket.emit("ai-response", {
+        content: res,
+        chat: payload.chat
+      });
     });
   });
 }

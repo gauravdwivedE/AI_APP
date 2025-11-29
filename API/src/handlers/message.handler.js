@@ -10,12 +10,20 @@ module.exports.createMessage =  async (payload) => {
     }
 }
 
-module.exports.fetchChatHistory =  async (chatId) => {
-    try {
-        const chatHistory = await messageModel.find({chat: chatId}).limit(10).lean()
-        return chatHistory
-        
-    } catch (err) {
-        return {error: err.message}
-    }
-}
+module.exports.fetchChatHistory = async (chatId) => {
+  try {
+    const chatHistory = await messageModel
+      .find({ chat: chatId })
+      .sort({ createdAt: 1 })
+      .limit(25)
+      .lean();
+
+    return chatHistory.map((item) => ({
+      role: item.role,
+      parts: [{ text: item.content }],
+    }));
+
+  } catch (err) {
+    return { error: err.message };
+  }
+};
