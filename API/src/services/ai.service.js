@@ -7,7 +7,7 @@ async function main(chatHistory) {
     model: "gemini-2.5-flash",
     contents: chatHistory
   });
-   return(response.text);
+   return response.text ;
 }
 
 async function generateVector(content) {
