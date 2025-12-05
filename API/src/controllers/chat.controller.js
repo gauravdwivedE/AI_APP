@@ -10,9 +10,24 @@ module.exports.createChat = async (req, res) => {
             message: "Chat created successfully",
             chat
         })
+    } catch (err) {        
+        res.status(500).json({
+            error: err
+        })
+    }
+}
+
+module.exports.getChat = async (req, res) => {
+    try {
+        let user = req.user._id
+        const chats = await chatModel.find({user}).sort({createdAt: -1})
+
+        res.status(200).json({
+            message: "Chat fetch successfully",
+            chats
+        })
     } catch (err) {
-        console.log(err);
-        
+     
         res.status(500).json({
             error: err
         })

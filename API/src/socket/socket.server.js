@@ -10,7 +10,12 @@ const {
 const { createMemory, queryMemory } = require("../services/vector.service");
 
 function initSocketServer(httpServer) {
-  const io = new Server(httpServer, {});
+  const io = new Server(httpServer, {cors:
+    {
+      origin: "http://localhost:5173",
+      credentials: true
+    }
+});
 
   io.use(async (socket, next) => {
     // cookie.parse is dividing token to key value pair
