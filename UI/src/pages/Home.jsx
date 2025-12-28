@@ -253,7 +253,7 @@ export default function Home() {
               onClick={() => setShowNewChatModal(true)}
               className="p-1 px-3 bg-indigo-600 hover:bg-indigo-500 rounded-md transition border border-indigo-500/40"
             >
-              +
+              + 
             </button>
           </div>
 
@@ -426,18 +426,21 @@ export default function Home() {
                   Cancel
                 </button>
 
+            {!loadingChats ? (
                 <button
                   className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg"
                   onClick={createChat}
                 >
-                  {loadingChats ? (
-                    <div className="flex justify-center">
-                      <div className="w-6 h-6 border-4 border-white/20 border-t-indigo-500 rounded-full animate-spin" />
-                    </div>
-                  ) : (
-                    "Create"
-                  )}
-                </button>
+                  Create
+                 </button>
+          ):
+            (
+            <div className="px-4 py-2 bg-indigo-500 rounded-lg flex justify-center">
+               <div className="w-6 h-6 border-4 border-white/20 border-t-indigo-500 rounded-full animate-spin" />
+            </div>                  
+          )
+      }
+                
               </div>
             </div>
           </div>
