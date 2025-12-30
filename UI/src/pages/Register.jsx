@@ -1,10 +1,22 @@
 import axios from "axios";
+import { useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
+import { LoginContext } from "../context/LoginProvider";
 
 export default function Register() {
   const { register, handleSubmit, formState: { errors }} = useForm();
+  const { token, login, logout, isLoggedIn } = useContext(LoginContext);
+  
+  useEffect(() => {
+    console.log(isLoggedIn);
+    
+    if(isLoggedIn){
+      navigate("/");
+    }
+  },[isLoggedIn])
+  
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
@@ -19,16 +31,20 @@ export default function Register() {
       );
 
       if(res.status == 201){
+        login(res.data.token)
         toast.success("Account created 🎉");
         navigate("/");
       }
     } catch (err) {
       console.log(err);
+      login("")
       const message = err.response?.data?.error || "Something went wrong. Try again.";
       toast.error(message);
     }
   };
 
+  
+  
   return (
     <div className="min-h-screen bg-linear-to-br from-neutral-900 via-black to-neutral-900 flex items-center justify-center p-4">
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl max-w-md w-full shadow-xl">
@@ -98,7 +114,7 @@ export default function Register() {
 
         <p className="text-center text-neutral-400 text-sm mt-4">
           Already have an account?{" "}
-          <Link to="/login" className="text-indigo-400 hover:underline">
+          <Link to="/" className="text-indigo-400 hover:underline">
             Login
           </Link>
         </p>

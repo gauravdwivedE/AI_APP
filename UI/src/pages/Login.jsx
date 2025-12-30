@@ -2,13 +2,16 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useContext } from "react";
+import { LoginContext } from "../context/LoginProvider";
 
 export default function Login() {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { token, login, logout, isLoggedIn } = useContext(LoginContext);
+  
   const navigate = useNavigate();
  
   const onSubmit = async (data) => {
- 
   try {
       const res = await axios.post(
         "http://localhost:3000/api/auth/login",
@@ -17,15 +20,20 @@ export default function Login() {
       );
 
       if(res.status == 200){
+        login(res.data.token)
         toast.success("Login successful 🎉");
+        navigate("/");
+        
       }
-      navigate("/");
     } catch (err) {
-      console.log(err);
+      login("")
       
       // Show API/server error inside toast
       const message = err.response?.data?.error || "Something went wrong. Try again.";
       toast.error(message);
+    }
+    finally{
+      reset()
     }
   };
 

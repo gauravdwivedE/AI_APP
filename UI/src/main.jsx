@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from "react-hot-toast";
+import { LoginProvider } from "../src/context/LoginProvider.jsx";
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
@@ -18,6 +19,8 @@ createRoot(document.getElementById('root')).render(
         },
       }}
     />
-    <App />
+    <LoginProvider>
+      <App />
+    </LoginProvider>
   </BrowserRouter>,
 )

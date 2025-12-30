@@ -1,16 +1,16 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
+import { LoginContext } from '../context/LoginProvider';
 
 export default function Home() {
   const [socket, setSocket] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
+  const { token, login, logout, isLoggedIn } = useContext(LoginContext);
+  
   const user = { firstName: "" };
-
   const [chats, setChats] = useState([]);
   const [loadingChats, setLoadingChats] = useState(true);
   const [conversations, setConversations] = useState([]);
@@ -39,8 +39,12 @@ export default function Home() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+
+ 
+
   // ★ SEND MESSAGE
   const sendMessage = () => {
+
     if (!activeChatId) {
       showToast("Please select a chat first.");
       return;
@@ -172,7 +176,7 @@ export default function Home() {
 
         const res = await axios.get(
           `http://localhost:3000/api/chats/${activeChatId}/messages`,
-          
+
           { withCredentials: true }
         );
 
@@ -214,10 +218,19 @@ export default function Home() {
         {/* MOBILE MENU BUTTON */}
         <button
           onClick={() => setSidebarOpen(true)}
-          className="md:hidden fixed top-4 left-4 z-30 p-2 bg-white/10 border border-white/20 rounded-xl backdrop-blur-lg"
+          className="md:hidden fixed top-4 left-4 z-30 p-2 bg-white/10 border border-white/10 rounded-xl backdrop-blur-lg"
         >
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          <svg
+            className="w-6 h-6 text-white"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
           </svg>
         </button>
 
@@ -236,7 +249,11 @@ export default function Home() {
             w-3/4 md:w-64
             bg-neutral-950/70 border-r border-white/10 backdrop-blur-xl p-4
             transform duration-300
-            ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+            ${
+              sidebarOpen
+                ? "translate-x-0"
+                : "-translate-x-full md:translate-x-0"
+            }
           `}
         >
           <button
@@ -253,7 +270,7 @@ export default function Home() {
               onClick={() => setShowNewChatModal(true)}
               className="p-1 px-3 bg-indigo-600 hover:bg-indigo-500 rounded-md transition border border-indigo-500/40"
             >
-              + 
+              +
             </button>
           </div>
 
@@ -272,14 +289,17 @@ export default function Home() {
                     setActiveChatId(chat._id);
                     setSidebarOpen(false);
                   }}
-                  className={`p-3 rounded-xl cursor-pointer border transition 
+                  className={`flex justify-between items-center  px-3 py-2 rounded-md cursor-pointer border transition 
                     ${
                       activeChatId === chat._id
-                        ? "bg-indigo-600/30 border-indigo-500/40"
-                        : "bg-white/5 border-white/10 hover:bg-white/10"
+                       ? "bg-indigo-600/30 border-indigo-500/40"
+                        : "bg-white/5 border-white/10 hover:bg-white/20"
                     }`}
                 >
-                  <p className="text-sm text-white/90 overflow-auto">{chat.title}</p>
+                  <p className="text-sm text-white/90 overflow-auto">
+                    {chat.title}
+                  </p>
+                  <p>-</p>
                 </div>
               ))
             )}
@@ -288,17 +308,25 @@ export default function Home() {
 
         {/* MAIN CHAT AREA */}
         <main className="flex-1 flex flex-col items-center p-4">
-          <div className="w-full max-w-3xl flex flex-col flex-1 mt-6">
+          <div className="w-full max-w-3xl flex flex-col flex-1 mt-3">
+            <div className="mb-1 flex items-center justify-between  rounded-xl ">
+              <h1></h1>
 
-            <div className="mb-6 text-center">
               <h2 className="text-3xl font-semibold text-white/90">
                 Hello, {user.firstName} 👋
               </h2>
+
+              <button
+              onClick={ () => logout()}
+                className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700
+               text-white font-medium shadow-md transition duration-200"
+              >
+                Logout
+              </button>
             </div>
 
             {/* ★ CHAT MESSAGES */}
             <div className="flex-1 overflow-y-auto max-h-[70vh] space-y-4 px-2">
-
               {/* ★ SHOW SPINNER WHEN LOADING */}
               {loadingMessages ? (
                 <div className="w-full flex justify-center items-center py-10">
@@ -329,22 +357,22 @@ export default function Home() {
                   ))} */}
 
                   {activeChat?.messages.map((msg) => (
-  <div
-    key={msg.id}
-    className={`flex w-full gap-3 ${
-      msg.role === "user" ? "justify-end" : "justify-start"
-    }`}
-  >
-    {/* AI Avatar */}
-    {msg.role !== "user" && (
-      <div className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
-        🤖
-      </div>
-    )}
+                    <div
+                      key={msg.id}
+                      className={`flex w-full gap-3 ${
+                        msg.role === "user" ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      {/* AI Avatar */}
+                      {msg.role !== "user" && (
+                        <div className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
+                          🤖
+                        </div>
+                      )}
 
-    {/* MESSAGE BUBBLE */}
-    <div
-      className={`
+                      {/* MESSAGE BUBBLE */}
+                      <div
+                        className={`
         max-w-[80%] p-4 text-sm rounded-2xl border backdrop-blur-xl
         prose prose-invert prose-pre:bg-black prose-pre:border prose-pre:border-white/30
         ${
@@ -353,21 +381,20 @@ export default function Home() {
             : "bg-white/10 text-white/90 border-white/10 rounded-bl-none"
         }
       `}
-    >
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-        {msg.text}
-      </ReactMarkdown>
-    </div>
+                      >
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {msg.text}
+                        </ReactMarkdown>
+                      </div>
 
-    {/* USER Avatar */}
-    {msg.role === "user" && (
-      <div className="w-9 h-9 rounded-full bg-indigo-600 border border-indigo-500 flex items-center justify-center">
-        🧑
-      </div>
-    )}
-  </div>
-))}
-
+                      {/* USER Avatar */}
+                      {msg.role === "user" && (
+                        <div className="w-9 h-9 rounded-full bg-indigo-600 border border-indigo-500 flex items-center justify-center">
+                          🧑
+                        </div>
+                      )}
+                    </div>
+                  ))}
 
                   {aiTyping && (
                     <div className="flex w-full justify-start">
@@ -385,13 +412,14 @@ export default function Home() {
 
             {/* INPUT BOX */}
             <div className="mt-6 w-full px-1 sm:px-0">
-              <div className="relative flex items-center">
+              <div  className="relative flex items-center">
                 <input
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className="w-full p-4 pl-6 pr-24 rounded-full bg-white/5 border border-white/10 text-white placeholder-neutral-500
                   shadow-[0_0_30px_rgba(0,0,0,0.3)] backdrop-blur-xl focus:ring-2 focus:ring-indigo-500 outline-none"
                   placeholder="Type your message..."
+                  
                 />
 
                 <button
@@ -409,7 +437,9 @@ export default function Home() {
         {showNewChatModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-neutral-900 p-6 rounded-2xl w-80 border border-white/10">
-              <h2 className="text-lg font-semibold mb-3 text-white">New Chat</h2>
+              <h2 className="text-lg font-semibold mb-3 text-white">
+                New Chat
+              </h2>
 
               <input
                 value={newChatTitle}
@@ -426,21 +456,18 @@ export default function Home() {
                   Cancel
                 </button>
 
-            {!loadingChats ? (
-                <button
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg"
-                  onClick={createChat}
-                >
-                  Create
-                 </button>
-          ):
-            (
-            <div className="px-4 py-2 bg-indigo-500 rounded-lg flex justify-center">
-               <div className="w-6 h-6 border-4 border-white/20 border-t-indigo-500 rounded-full animate-spin" />
-            </div>                  
-          )
-      }
-                
+                {!loadingChats ? (
+                  <button
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg"
+                    onClick={createChat}
+                  >
+                    Create
+                  </button>
+                ) : (
+                  <div className="px-4 py-2 bg-indigo-500 rounded-lg flex justify-center">
+                    <div className="w-6 h-6 border-4 border-white/20 border-t-indigo-500 rounded-full animate-spin" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
